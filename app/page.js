@@ -220,7 +220,7 @@ export default function Home() {
             <Button
               onClick={() => setSearchTerm('')}
               sx={{
-                color: '#333',
+                color: '#0080ff',
                 '&:hover': {
                   bgcolor: '#e4d9e8',
                   transition: 'background-color 0.3s',
