@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
 import { Box, Stack, Typography, Button, TextField, Modal, MenuItem, Select, FormControl, InputLabel } from '@mui/material'
-import { useRouter } from 'next/navigation'
+import FilterListIcon from '@mui/icons-material/FilterList'
 import { firestore, storage } from '../firebase'
-import { collection, getDocs, query, doc, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore'
+import { query, collection, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import FilterListIcon from '@mui/icons-material/FilterList';
 
 const modalStyle = {
   position: 'absolute',
@@ -33,7 +33,6 @@ export default function Home() {
   const [expiryDate, setExpiryDate] = useState('')
   const [category, setCategory] = useState('')
   const [image, setImage] = useState(null)
-  const [imageUrl, setImageUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null)
@@ -44,7 +43,15 @@ export default function Home() {
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
 
-  const router = useRouter()
+  const resetForm = () => {
+    setItemName('')
+    setQuantity('')
+    setUnit('kilograms')
+    setExpiryDate('')
+    setCategory('')
+    setImage(null)
+    setCapturedImage(null)
+  }
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, 'inventory'))
@@ -64,9 +71,11 @@ export default function Home() {
 
     const docRef = doc(collection(firestore, 'inventory'), itemName)
     const docSnap = await getDoc(docRef)
-    if (docSnap.exists() && docSnap.data().quantity === quantity) {
-      alert('This quantity already exists!')
-      return
+    
+    let newQuantity = Number(quantity)
+    
+    if (docSnap.exists()) {
+      newQuantity += docSnap.data().quantity
     }
 
     let url = ''
@@ -85,7 +94,7 @@ export default function Home() {
     }
 
     const itemData = {
-      quantity: docSnap.exists() ? docSnap.data().quantity + quantity : quantity,
+      quantity: newQuantity,
       unit,
       expiryDate,
       category,
@@ -94,13 +103,17 @@ export default function Home() {
 
     await setDoc(docRef, itemData)
     await updateInventory()
-    handleClose()  // Close the modal after adding the item
+    handleClose()
   }
 
-  const handleOpen = () => setOpen(true)
+  const handleOpen = () => {
+    resetForm()
+    setOpen(true)
+  }
+
   const handleClose = () => {
     setOpen(false)
-    setCapturedImage(null)
+    stopCamera()
   }
 
   const handleCapture = () => {
@@ -126,7 +139,7 @@ export default function Home() {
     context.drawImage(video, 0, 0, canvas.width, canvas.height)
     canvas.toBlob(blob => {
       setCapturedImage(blob)
-      stopCamera()  // Stop camera immediately after capturing
+      stopCamera()
     }, 'image/jpeg')
   }
 
@@ -148,7 +161,8 @@ export default function Home() {
     const docRef = doc(firestore, 'inventory', name)
     const docSnap = await getDoc(docRef)
     if (docSnap.exists()) {
-      const newQuantity = docSnap.data().quantity + amount
+      const currentQuantity = docSnap.data().quantity
+      const newQuantity = currentQuantity + amount
       if (newQuantity <= 0) {
         await deleteDoc(docRef)
       } else {
@@ -276,9 +290,11 @@ export default function Home() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Button variant="contained" onClick={() => setSearchTerm('')}>Search</Button>
+        <Button variant="contained" onClick={() => setOpen(true)}>
+          Add Item
+        </Button>
       </Stack>
-      <Button variant="contained" onClick={handleOpen}>Add New Item</Button>
+
       <Modal
         open={open}
         onClose={handleClose}
@@ -286,7 +302,7 @@ export default function Home() {
         aria-describedby="modal-modal-description"
       >
         <Box sx={modalStyle}>
-          <Typography variant="h6" component="h2">
+          <Typography id="modal-modal-title" variant="h6" component="h2">
             Add Inventory Item
           </Typography>
           <TextField
@@ -399,6 +415,7 @@ export default function Home() {
           </Button>
         </Box>
       </Modal>
+      
       <Box width="100%" padding={2} display="flex" flexDirection="column" gap={2}>
         {filteredInventory.length === 0 && (
           <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
@@ -419,14 +436,14 @@ export default function Home() {
             sx={{ '&:hover': { bgcolor: '#e4d9e8', transform: 'scale(1.02)', transition: 'transform 0.3s' } }}
           >
             <Box display="flex" gap={2}>
-              {item.imageUrl && <img src={item.imageUrl} alt={item.name} width="70" height="75" />}
+              {item.imageUrl && <Image src={item.imageUrl} alt={item.name} width={70} height={75} />}
               <Box>
                 <Typography variant="h6">{item.name}</Typography>
                 <Typography>{item.quantity} {item.unit}</Typography>
                 <Typography>Category: {item.category}</Typography>
               </Box>
             </Box>
-            <Typography variant="contained" sx={{color:'red'}}> {item.expiryDate}</Typography>
+            <Typography variant="contained" sx={{ color: 'red' }}> {item.expiryDate}</Typography>
             <Stack direction="row" spacing={1}>
               <Button variant="contained" color="primary" onClick={() => updateQuantity(item.name, 1)}>+</Button>
               <Button variant="contained" color="secondary" onClick={() => updateQuantity(item.name, -1)}>-</Button>
@@ -435,6 +452,7 @@ export default function Home() {
           </Box>
         ))}
       </Box>
+
       <Modal
         open={deleteConfirmation}
         onClose={() => setDeleteConfirmation(false)}
