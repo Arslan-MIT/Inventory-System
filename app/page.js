@@ -282,19 +282,19 @@ export default function Home() {
         </Box>
       </Stack>
 
-      <Stack direction="row" spacing={2} width="100%" padding={2} alignItems="center">
+      <Stack direction="row" spacing={2} width="100%" padding={2} alignItems="center"   >
         <TextField
           label="Search"
           variant="outlined"
+
           fullWidth
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <Button variant="contained" onClick={() => setOpen(true)}>
+        />             
+      </Stack>
+      <Button variant="contained" onClick={() => setOpen(true)}>
           Add Item
         </Button>
-      </Stack>
-
       <Modal
         open={open}
         onClose={handleClose}
@@ -302,7 +302,7 @@ export default function Home() {
         aria-describedby="modal-modal-description"
       >
         <Box sx={modalStyle}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
+          <Typography id="modal-modal-title" variant="h6" textAlign={'center'} component="h2">
             Add Inventory Item
           </Typography>
           <TextField
@@ -383,7 +383,7 @@ export default function Home() {
               variant="outlined"
               onClick={handleCapture}
               sx={{
-                borderRadius: '8px',
+                borderRadius: '8px', alignItems: 'right',
               }}
             >
               Capture Image
@@ -427,6 +427,7 @@ export default function Home() {
           <Box
             key={item.name}
             padding={2}
+            height={90}
             bgcolor="white"
             boxShadow={2}
             borderRadius={2}
