@@ -438,12 +438,12 @@ export default function Home() {
             <Box display="flex" gap={2}>
               {item.imageUrl && <Image src={item.imageUrl} alt={item.name} width={70} height={75} />}
               <Box>
-                <Typography variant="h6">{item.name}</Typography>
-                <Typography>{item.quantity} {item.unit}</Typography>
-                <Typography>Category: {item.category}</Typography>
+                <Typography variant="h6" sx={{ color: 'Black' }}>{item.name}</Typography>
+                <Typography sx={{ color: 'Black' }}>{item.quantity} {item.unit}</Typography>
+                <Typography sx={{ color: 'Black' }}>Category: {item.category}</Typography>
               </Box>
             </Box>
-            <Typography variant="contained" sx={{ color: 'red' }}> {item.expiryDate}</Typography>
+            <Typography variant="contained" sx={{ color: 'red' }}>Expiry: {item.expiryDate}</Typography>
             <Stack direction="row" spacing={1}>
               <Button variant="contained" color="primary" onClick={() => updateQuantity(item.name, 1)}>+</Button>
               <Button variant="contained" color="secondary" onClick={() => updateQuantity(item.name, -1)}>-</Button>
